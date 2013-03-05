@@ -13,6 +13,10 @@ ds = require 'docstore'
 log = (args...) -> console.log.apply(console, args)
 error = (args...) -> console.error.apply(console, args)
 
+# ## fs
+stat = fs.existsSync
+mkdir = fs.mkdirSync
+
 # ## General
 applyFirst = (fn, arg) ->
     (args...) ->
@@ -75,6 +79,7 @@ addSourceType = (req, note) ->
     if payload.sourceType?
         note.sourceType = payload.sourceType
     note
+
 serveRequest = (store, passphrase) ->
     (req, res) ->
         maybeContent = maybe(
@@ -101,8 +106,8 @@ serveRequest = (store, passphrase) ->
             else
                 two res
 
-serve = (store, passphrase, port = 4073, host = 'localhost') ->
-    server = connect()
+serve = (store, ssl, passphrase, port = 4073, host = 'localhost') ->
+    server = connect(opts, ssl)
         .use(connect.bodyParser())
         .use(serveRequest(store, passphrase))
     server.listen(port, host)
@@ -116,17 +121,36 @@ connectDocstore = (storePath, cb) ->
             cb store
 
 ensureNotesDir = (notesPath) ->
-    unless fs.existsSync(notesPath)
-        fs.mkdirSync(notesPath)
+    unless stat notesPath
+        mkdir notesPath
+
+ensureSSL = (openSSLBin, keyPath, certPath, cb) ->
+    if stat(keyPath) and stat(certPath)
+        return cb()
+
+    # assume at this point that neither exist since they depend on
+    # each other.
+    # TODO
+    cb()
 
 # # Driver function.
 HOME = process.env.HOME
 NOTESPATH = path.join HOME, '.notes'
 STOREPATH = path.join NOTESPATH, 'docstore'
 PASSPHRASE = 'secret'
+SSLPATH = path.join NOTESPATH, 'ssl'
+KEYPATH = path.join SSLPATH, 'key'
+CERTPATH = path.join SSLPATH, 'cert'
+OPENSSLBIN = '/usr/bin/openssl'
+
 main = (storePath = STOREPATH, port = 4073, host = 'localhost') ->
     ensureNotesDir(NOTESPATH)
-    connectDocstore storePath, (store) ->
-        serve store, PASSPHRASE, port, host
+    ensureSSL OPENSSLBIN, KEYPATH, CERTPATH, (e) ->
+        return error(e) if e
+        ssl =
+            key: fs.readFileSync KEYPATH
+            cert: fs.readFileSYnc CERTPATH
+        connectDocstore storePath, (store) ->
+            serve store, ssl, PASSPHRASE, port, host
 
 main()
