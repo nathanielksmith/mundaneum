@@ -14,17 +14,13 @@ log = (args...) -> console.log.apply(console, args)
 error = (args...) -> console.error.apply(console, args)
 
 # ## General
-id = (x) -> x
 applyFirst = (fn, arg) ->
     (args...) ->
         fn.apply @, [arg].concat(args)
 
 compose = (fns...) ->
-    _compose = (fnFst, fnSnd) ->
+    fns.reduce (fnFst, fnSnd) ->
         (args...) -> fnFst fnSnd.apply(@, args)
-    reduced = fns.reduce(_compose)
-    (outer_args...) ->
-        reduced.apply(@, outer_args)
 
 type = (t, o) -> o instanceof t
 
@@ -33,6 +29,8 @@ Just::v = -> @value
 
 None = (@errorMsg) ->
 None::v = -> @errorMsg
+
+isNone = applyFirst type, None
 
 maybe = (fn) ->
     (args...) ->
@@ -61,7 +59,22 @@ extractContent = (payload) ->
 verifyPayload = (passphrase, payload) ->
     throw 'passphrase mismatch' unless payload.passphrase is passphrase
     payload
-# TODO verifyNote
+
+addTimestamp = (req, note = {}) ->
+    note.created = Date.now()
+    note
+addSourceUA = (req, note = {}) ->
+    if req.headers?['user-agent']?
+        note.ua = req.headers['user-agent']
+    note
+addSourceType = (req, note) ->
+    maybePayload = maybe(extractPayload) req
+    if isNone maybePayload
+        return note
+    payload = maybePayload.v()
+    if payload.sourceType?
+        note.sourceType = payload.sourceType
+    note
 serveRequest = (store, passphrase) ->
     (req, res) ->
         maybeContent = maybe(
@@ -71,11 +84,16 @@ serveRequest = (store, passphrase) ->
                 extractPayload
             )
         ) req
-        if type None, maybeContent
+        if isNone maybeContent
             four res
             return error maybeContent.v()
-        content = maybeNote.v()
-        note = content:content
+        content = maybeContent.v()
+        note = compose(
+                applyFirst(addTimestamp, req),
+                applyFirst(addSourceUA, req),
+                applyFirst(addSourceType, req)
+                # additional/future metadata goes here
+            ) content:content
         store.save note, (err, doc) ->
             if err
                 five res
