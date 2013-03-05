@@ -4,6 +4,7 @@ http = require 'http'
 path = require 'path'
 url = require 'url'
 
+connect = require 'connect'
 ds = require 'docstore'
 
 # # Utility
@@ -13,12 +14,17 @@ log = (args...) -> console.log.apply(console, args)
 error = (args...) -> console.error.apply(console, args)
 
 # ## General
+id = (x) -> x
 applyFirst = (fn, arg) ->
     (args...) ->
         fn.apply @, [arg].concat(args)
 
-compose = (fnFst, fnSnd) ->
-    (args...) -> fnFst fnSnd.apply(@, args)
+compose = (fns...) ->
+    _compose = (fnFst, fnSnd) ->
+        (args...) -> fnFst fnSnd.apply(@, args)
+    reduced = fns.reduce(_compose)
+    (outer_args...) ->
+        reduced.apply(@, outer_args)
 
 type = (t, o) -> o instanceof t
 
@@ -46,26 +52,30 @@ five = applyFirst end, 500
 
 # # Actual application code.
 
-extractPayload = (req) -> req.url[1..]
-extractNote = JSON.parse
-verifyNote = (passphrase, note) ->
-    #throw 'passphrase mismatch' unless note.passphrase is passphrase
-    note
+extractPayload = (req) ->
+    throw 'bad http method' unless req.method is 'POST'
+    req.body
+extractContent = (payload) ->
+    throw 'corrupt content' unless payload.content
+    payload.content
+verifyPayload = (passphrase, payload) ->
+    throw 'passphrase mismatch' unless payload.passphrase is passphrase
+    payload
 # TODO verifyNote
 serveRequest = (store, passphrase) ->
     (req, res) ->
-        log 'attempt', req.url
-        maybeNote = maybe(
+        maybeContent = maybe(
             compose(
-                applyFirst(verifyNote, passphrase),
-                extractNote,
+                extractContent,
+                applyFirst(verifyPayload, passphrase),
                 extractPayload
             )
         ) req
-        if type None, maybeNote
+        if type None, maybeContent
             four res
-            return error maybeNote.v()
-        note = maybeNote.v()
+            return error maybeContent.v()
+        content = maybeNote.v()
+        note = content:content
         store.save note, (err, doc) ->
             if err
                 five res
@@ -74,7 +84,9 @@ serveRequest = (store, passphrase) ->
                 two res
 
 serve = (store, passphrase, port = 4073, host = 'localhost') ->
-    server = http.createServer(serveRequest(store, passphrase))
+    server = connect()
+        .use(connect.bodyParser())
+        .use(serveRequest(store, passphrase))
     server.listen(port, host)
     return server
 
