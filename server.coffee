@@ -2,6 +2,7 @@
 fs = require 'fs'
 http = require 'http'
 path = require 'path'
+exec = (require 'child_process').exec
 url = require 'url'
 
 connect = require 'connect'
@@ -21,6 +22,12 @@ mkdir = fs.mkdirSync
 applyFirst = (fn, arg) ->
     (args...) ->
         fn.apply @, [arg].concat(args)
+
+applyLast = (fn, arg) ->
+    (args...) ->
+        fn.apply @, args.concat([arg])
+
+map = (fn, lst) -> lst.map fn
 
 compose = (fns...) ->
     fns.reduce (fnFst, fnSnd) ->
@@ -94,11 +101,13 @@ serveRequest = (store, passphrase) ->
             return error maybeContent.v()
         content = maybeContent.v()
         note = compose(
-                applyFirst(addTimestamp, req),
-                applyFirst(addSourceUA, req),
-                applyFirst(addSourceType, req)
+            map applyLast(applyFirst, req), [
+                addTimestamp,
+                addSourceUA,
+                addSourceType
                 # additional/future metadata goes here
-            ) content:content
+            ]
+        ) content:content
         store.save note, (err, doc) ->
             if err
                 five res
@@ -107,10 +116,11 @@ serveRequest = (store, passphrase) ->
                 two res
 
 serve = (store, ssl, passphrase, port = 4073, host = 'localhost') ->
-    server = connect(opts, ssl)
+    server = connect(ssl)
         .use(connect.bodyParser())
         .use(serveRequest(store, passphrase))
     server.listen(port, host)
+    log 'listening'
     return server
 
 connectDocstore = (storePath, cb) ->
@@ -120,36 +130,38 @@ connectDocstore = (storePath, cb) ->
         else
             cb store
 
-ensureNotesDir = (notesPath) ->
-    unless stat notesPath
-        mkdir notesPath
+ensureMundaneumDir = (mundaneumPath) ->
+    unless stat mundaneumPath
+        mkdir mundaneumPath
 
-ensureSSL = (openSSLBin, keyPath, certPath, cb) ->
+ensureSSL = (openSSLBin, sslPath, keyPath, certPath, cb) ->
+    unless stat(sslPath)
+        mkdir sslPath
+
     if stat(keyPath) and stat(certPath)
         return cb()
 
-    # assume at this point that neither exist since they depend on
-    # each other.
-    # TODO
-    cb()
+    generateSSL = applyFirst exec, "#{openSSLBin} req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj '/C=US/ST=Denial/L=Springfield/O=Dis/CN=mundaneum' -keyout #{keyPath} -out #{certPath}"
+
+    return generateSSL cb
 
 # # Driver function.
 HOME = process.env.HOME
-NOTESPATH = path.join HOME, '.notes'
-STOREPATH = path.join NOTESPATH, 'docstore'
+MUNDANEUMPATH = path.join HOME, '.mundaneum'
+STOREPATH = path.join MUNDANEUMPATH, 'docstore'
 PASSPHRASE = 'secret'
-SSLPATH = path.join NOTESPATH, 'ssl'
-KEYPATH = path.join SSLPATH, 'key'
-CERTPATH = path.join SSLPATH, 'cert'
+SSLPATH = path.join MUNDANEUMPATH, 'ssl'
+KEYPATH = path.join SSLPATH, 'mundaneum.key'
+CERTPATH = path.join SSLPATH, 'mundaneum.crt'
 OPENSSLBIN = '/usr/bin/openssl'
 
 main = (storePath = STOREPATH, port = 4073, host = 'localhost') ->
-    ensureNotesDir(NOTESPATH)
-    ensureSSL OPENSSLBIN, KEYPATH, CERTPATH, (e) ->
+    ensureMundaneumDir(MUNDANEUMPATH)
+    ensureSSL OPENSSLBIN, SSLPATH, KEYPATH, CERTPATH, (e) ->
         return error(e) if e
         ssl =
             key: fs.readFileSync KEYPATH
-            cert: fs.readFileSYnc CERTPATH
+            cert: fs.readFileSync CERTPATH
         connectDocstore storePath, (store) ->
             serve store, ssl, PASSPHRASE, port, host
 
