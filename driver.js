@@ -27,7 +27,7 @@ HOST = 'localhost';
             if (err) return error(e);
             var ssl = {key: read(KEYPATH), cert: read(CERTPATH)};
             daemon.connectDatastore(STOREPATH, applyRight(daemon.serve, ssl, PASSPHRASE, PORT, HOST));
-    });
+        });
     var content = argv.slice(2).join(' ');
     client.postNote(PORT, HOST, PASSPHRASE, content);
 })(process.argv);
