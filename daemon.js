@@ -53,6 +53,7 @@ var saveNote = function(store, note, cb) {store.save(note, cb);}
 var requestServer = function(store, passphrase) {
     return function(request, response) {
         log('request made');
+        log(request);
         var maybeContent = maybe(compose(
                 extractContent,
                 applyFirst(verifyPayload, passphrase),

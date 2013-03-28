@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
-var path = require('path');
+var path = require('path'),
+request = require('request');
 
 var daemon = require('./daemon'),
-util = require('./util');
-util.extend(global, util);
+client = require('./client');
+
+require('./util').extend(global, require('./util'));
 
 var HOME = process.env.HOME,
 MUNDANEUMPATH = path.join(HOME, '.mundaneum'),
@@ -26,4 +28,6 @@ HOST = 'localhost';
             var ssl = {key: read(KEYPATH), cert: read(CERTPATH)};
             daemon.connectDatastore(STOREPATH, applyRight(daemon.serve, ssl, PASSPHRASE, PORT, HOST));
     });
+    var content = argv.slice(2).join(' ');
+    client.postNote(PORT, HOST, PASSPHRASE, content);
 })(process.argv);
