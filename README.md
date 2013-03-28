@@ -1,6 +1,11 @@
-# notes
+# mundaneum
 
-being a memory-extending device for bits of personal knowledge
+being a memory-extending device for bits of personal knowledge. More simply, a private microblogger.
+
+## NOTE
+
+this is 100% half-in-brain WIP code. It is mostly pipe dreams. Do not use
+unless you want to contribute.
 
 ## motivation
 
@@ -29,30 +34,30 @@ From this brick of prose we can extract some features that are _useful_:
 
 ### proposed CLI interface
 
-	    $ note --connect notehost:noteport
-		Passphrase? ...
-		OK
+        $ mundaneum --connect notehost:noteport
+        Passphrase? ...
+        OK
 
-        $ note http://someurl.com/somedoc.pdf
-		# if internet
-		OK
+        $ mundaneum http://someurl.com/somedoc.pdf
+        # if internet
+        OK
 
-        $ note http://someurl.com/somedoc.pdf
-		# if not internet
-		LOCAL OK
-		# then connect and...
-		$ note --sync
-		OK
-		
-		$ echo http://someuril.com/somedoc.pdf | note
+        $ mundaneum http://someurl.com/somedoc.pdf
+        # if not internet
+        LOCAL OK
+        # then connect and...
+        $ mundaneum --sync
+        OK
+
+        $ echo http://someuril.com/somedoc.pdf | mundaneum
 
 ### proposed browser
 
  * go to central site (or browser plugin.)
- * "connect notehost:noteport"
+ * "connect mundaneumhost:mundaneumport"
  * passphrase prompt
  * dest, pass stored in browser (cookie or whatever)
- * then js from any page can hit notehost (CORS)
+ * then js from any page can hit mundaneumhost (CORS)
  * https only (self-signed should be fine). payload is something like:
             {"passphrase":"...", "content":..., "source":"browser|cli|phone"}
 
@@ -73,9 +78,6 @@ Timestamp created. Source IP.
 
 ## Development Plan
 
-Backend node.js server with http interface. consider a raw tcp
-interface but note that security is an issue, there: ie how to
-encrypt? research ssh encryption and see if you can do a pubkey
-setup. but https is fine in the short term. start with
+Backend node.js server with https interface. start with
 docstore. implement cli first. consider tests.
 
