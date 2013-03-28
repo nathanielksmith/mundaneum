@@ -1,0 +1,20 @@
+{
+    "name":"mundaneum",
+    "preferGlobal": true,
+    "version":"0.0.1",
+    "author":"nathaniel smith <nathanielksmith@gmail.com>",
+    "description":"memory extender, vault of all things",
+    "bin": {
+        "mundaneum":"./driver.js"
+    },
+    "dependencies": {
+        "allong.es":"0.5.4",
+        "connect":"2.7.3",
+        "docstore": "0.1.1",
+        "request": "2.16.6"
+    },
+    "license": "BSD",
+    "engines": {
+        "node":">=0.6"
+    }
+}
