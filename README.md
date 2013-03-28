@@ -34,7 +34,7 @@ From this brick of prose we can extract some features that are _useful_:
 
 ### proposed CLI interface
 
-        $ mundaneum --connect notehost:noteport
+        $ mundaneum --connect mundaneumhost:mundaneumport
         Passphrase? ...
         OK
 
@@ -49,7 +49,8 @@ From this brick of prose we can extract some features that are _useful_:
         $ mundaneum --sync
         OK
 
-        $ echo http://someuril.com/somedoc.pdf | mundaneum
+        $ echo http://someurl.com/somedoc.pdf | mundaneum -
+        $ cat somefile | mundaneum -
 
 ### proposed browser
 
