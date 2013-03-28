@@ -1,8 +1,8 @@
 # # Requirements.
 fs = require 'fs'
-http = require 'http'
 path = require 'path'
 exec = (require 'child_process').exec
+https = require 'https'
 url = require 'url'
 
 connect = require 'connect'
@@ -65,6 +65,7 @@ extractPayload = (req) ->
     throw 'bad http method' unless req.method is 'POST'
     req.body
 extractContent = (payload) ->
+    log payload
     throw 'corrupt content' unless payload.content
     payload.content
 verifyPayload = (passphrase, payload) ->
@@ -89,6 +90,7 @@ addSourceType = (req, note) ->
 
 serveRequest = (store, passphrase) ->
     (req, res) ->
+        log 'request made'
         maybeContent = maybe(
             compose(
                 extractContent,
@@ -100,13 +102,20 @@ serveRequest = (store, passphrase) ->
             four res
             return error maybeContent.v()
         content = maybeContent.v()
+        log content
+        #note = compose(
+        #    map(applyLast(applyFirst, req), [
+        #        addTimestamp,
+        #        addSourceUA,
+        #        addSourceType
+        #        # additional/future metadata goes here
+        #    ])
+        #) content:content
         note = compose(
-            map applyLast(applyFirst, req), [
-                addTimestamp,
-                addSourceUA,
-                addSourceType
+                applyFirst(addTimestamp, req),
+                applyFirst(addSourceUA, req),
+                applyFirst(addSourceType, req),
                 # additional/future metadata goes here
-            ]
         ) content:content
         store.save note, (err, doc) ->
             if err
@@ -119,7 +128,7 @@ serve = (store, ssl, passphrase, port = 4073, host = 'localhost') ->
     server = connect(ssl)
         .use(connect.bodyParser())
         .use(serveRequest(store, passphrase))
-    server.listen(port, host)
+    https.createServer(ssl, server).listen(port, host)
     log 'listening'
     return server
 
