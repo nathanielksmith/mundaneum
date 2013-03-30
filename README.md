@@ -47,7 +47,7 @@ question: what config format? this matters. i am reluctant to use json but ehhh.
 
 ### proposed CLI interface
 
-        $ mundaneum --connect notehost:noteport
+        $ mundaneum --connect mundaneumhost:mundaneumport
         Passphrase? ...
         OK
 
@@ -62,7 +62,8 @@ question: what config format? this matters. i am reluctant to use json but ehhh.
         $ mundaneum --sync
         OK
 
-        $ echo http://someuril.com/somedoc.pdf | mundaneum
+        $ echo http://someurl.com/somedoc.pdf | mundaneum -
+        $ cat somefile | mundaneum -
 
 ### proposed browser
 
