@@ -30,6 +30,19 @@ From this brick of prose we can extract some features that are _useful_:
  * private
    * self-hosted. one IP -> person.
 
+## Architecture
+
+all notes are saved to localhost; a client request (browser, cli) will
+never make an external request.
+
+question: do we need to use http/networking locally? i think so; a
+client library ties you to a specific language. always using http
+means client can be any language / server can be any language. it's
+also less code: the server that the local client talks to is identical
+to a server receiving federated notes.
+
+question: what config format? this matters. i am reluctant to use json but ehhh. fine for now.
+
 ## UI thoughts
 
 ### proposed CLI interface

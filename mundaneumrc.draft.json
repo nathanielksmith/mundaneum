@@ -1,0 +1,25 @@
+{
+    "local": {
+        "passphrase":"ecrset",
+        "port":5555
+    },
+    "hosts": [ // host definition. can use these secrets throughout.
+        ["sylvia", "sylvia:4078", "secrot"],
+        ["sexton", "sexton:4078", "socret"],
+        ["lamdba_wiki", "lambdaphil.es:7768", "screret"],
+        ["lambda_personal", "lambdaphil.es:6778", "scrorot"],
+        ["earlham", "quark.cs.earlham.edu:5667", "screerit"]
+    ],
+    "federate": [
+        ["sylvia"],
+        ["sexton"],
+        ["lambda_wiki", "#lwiki"], // federate all notes with this pattern
+        ["lambda_personal"]
+    ],
+    "sync": [
+        ["sylvia"],
+        ["sexton"],
+        ["lambda_personal"],
+        ["earlham", "#earlham"] // apply a label to synced messages
+    ]
+}
