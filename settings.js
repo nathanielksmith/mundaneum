@@ -17,7 +17,6 @@ exports.KEYPATH = path.join(exports.SSLPATH, 'mundaneum.key');
 exports.CERTPATH = path.join(exports.SSLPATH, 'mundaneum.cert');
 exports.OPENSSLBIN = '/usr/bin/openssl';
 
-
 // Dynamic settings
 if (!stat(exports.RCPATH)) {
     throw exports.MUNDANEUMPATH + " must exist to minimally define a passphrase.";
@@ -44,19 +43,22 @@ if (!exports.PASSPHRASE) {
     throw "a passphrase must be set in " + exports.RCPATH;
 }
 
-exports.HOSTS = compose(tuples2obj, applyFirst(map, rc.hosts), applyArg, arity(3), function(label, hostport, passphrase) {
+var processHosts = applyArg(arity(3)(function(label, hostport, passphrase) {
     hostport = hostport.split(':');
     return [label, {
         host:hostport[0],
         port:hostport[1] || PORTDEFAULT,
         passphrase: passphrase
     }];
-})();
+}));
+exports.HOSTS = compose(tuples2obj, applyFirst(map, processHosts))(rc.hosts);
 
-exports.FEDERATE = compose(tuples2obj, applyFirst(map, rc.federate), applyArg, function(label, filter) {
+var processFederate = applyArg(function(label, filter) {
     return [label, {filter:new RegExp(filter || '.*')}];
-})();
+});
+exports.FEDERATE = compose(tuples2obj, applyFirst(map, processFederate))(rc.federate);
 
-exports.SYNC = compose(tuples2obj, applyFirst(map, rc.sync), applyArg, function(label, tag) {
+var processSync = applyArg(function(label, tag) {
     return [label, {tag: tag || ''}];
-})();
+});
+exports.SYNC = compose(tuples2obj, applyFirst(map, processSync))(rc.sync);
