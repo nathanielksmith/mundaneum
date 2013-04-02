@@ -59,7 +59,7 @@ exports.arity = function(a) {
     return function(fn) {
         return function() {
             if (arguments.length !== a)
-                throw fn.name + " expects " + a + " arguments; " + " got " + arguments.length;
+                throw (fn.name||'function') + " expects " + a + " arguments; " + " got " + arguments.length;
             return fn.apply(this, arguments);
         };
     };
