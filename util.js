@@ -41,6 +41,30 @@ exports.maybe = function(fn) {
     });
 };
 
+exports.__slice = Array.prototype.slice.call.bind(Array.prototype.slice);
+exports.tuples2obj = function(tuples) {
+    var obj = {};
+    tuples.forEach(function(t) {obj[t[0]] = t[1]});
+    return obj;
+};
+
+exports.applyArg = function(fn) {
+    return function() {
+        var args = exports.__slice(arguments).pop();
+        return fn.apply(this, args);
+    }
+};
+
+exports.arity = function(a) {
+    return function(fn) {
+        return function() {
+            if (arguments.length !== a)
+                throw fn.name + " expects " + a + " arguments; " + " got " + arguments.length;
+            return fn.apply(this, arguments);
+        };
+    };
+};
+
 exports.endResponse = function(statusCode, response) {
     response.writeHead(statusCode);
     response.end();

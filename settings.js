@@ -44,36 +44,19 @@ if (!exports.PASSPHRASE) {
     throw "a passphrase must be set in " + exports.RCPATH;
 }
 
-
-exports.HOSTS = {};
-rc.hosts.forEach(function(triple) {
-    if (triple.length !== 3) {
-        throw "host definition must be a triple <label, domain:port, passphrase>";
-    }
-    var label = triple[0],
-    hostport = triple[1].split(':'),
-    passphrase = triple[2];
-    
-    var host = hostport[0];
-    var port = hostport[1] || PORTDEFAULT;
-
-    exports.HOSTS[label] = {
-        host:host,
-        port:port,
+exports.HOSTS = compose(tuples2obj, applyFirst(map, rc.hosts), applyArg, arity(3), function(label, hostport, passphrase) {
+    hostport = hostport.split(':');
+    return [label, {
+        host:hostport[0],
+        port:hostport[1] || PORTDEFAULT,
         passphrase: passphrase
-    };
-});
+    }];
+})();
 
-exports.FEDERATE = {};
-rc.federate.forEach(function(pair) {
-    var label = pair[0],
-    filter = new RegExp(pair[1] || '.*');
-    exports.FEDERATE[label] = {filter:filter};
-});
+exports.FEDERATE = compose(tuples2obj, applyFirst(map, rc.federate), applyArg, function(label, filter) {
+    return [label, {filter:new RegExp(filter || '.*')}];
+})();
 
-exports.SYNC = {};
-rc.sync.forEach(function(pair) {
-    var label = pair[0],
-    tag = pair[1] || '';
-    exports.SYNC[label] = {tag:tag};
-});
+exports.SYNC = compose(tuples2obj, applyFirst(map, rc.sync), applyArg, function(label, tag) {
+    return [label, {tag: tag || ''}];
+})();
