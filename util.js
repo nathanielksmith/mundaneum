@@ -2,7 +2,6 @@ var fs = require('fs');
 
 var types = require('./types'),
 a = require('allong.es');
-a.applyFirst = a.applyfirst; // TODO hopefully this will be patched soon
 
 exports.stat = fs.existsSync;
 exports.mkdir = fs.mkdir;
