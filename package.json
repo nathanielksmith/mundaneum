@@ -1,7 +1,7 @@
 {
     "name":"mundaneum",
     "preferGlobal": true,
-    "version":"0.0.1",
+    "version":"0.0.2",
     "author":"nathaniel smith <nathanielksmith@gmail.com>",
     "description":"memory extender, vault of all things",
     "bin": {
