@@ -83,29 +83,43 @@ var requestServer = function(store, passphrase) {
     };
 };
 
-exports.serve = function(store, ssl, passphrase, port, host) {
+var serve = function(store, pidPath, ssl, passphrase, port, host) {
     var app = connect(ssl)
         .use(connect.bodyParser())
         .use(requestServer(store, passphrase));
     https.createServer(ssl, app).listen(port, host);
     log('listening at', host, port);
+    write(pidPath, 'TODO');
     return app;
 };
 
-exports.connectDatastore = function(storePath, cb) {
+var connectDatastore = function(storePath, cb) {
     ds.open(storePath, function(err, store) {
-        if (err) throw(err);
-        else cb(store);
+        if (err) return cb(err);
+        else cb(null, store);
     });
 };
 
-exports.ensureMundaneumDir = function(mundaneumPath) {
+var ensureMundaneumDir = function(mundaneumPath) {
     if (!stat(mundaneumPath)) mkdir(mundaneumPath);
 };
 
-exports.ensureSSL = function(openSSLBin, sslPath, keyPath, certPath, cb) {
+var ensureSSL = function(openSSLBin, sslPath, keyPath, certPath, cb) {
     if (!stat(sslPath)) mkdir(sslPath);
     if (stat(keyPath) && stat(certPath)) return cb();
     var generateSSL = applyFirst(exec, openSSLBin+" req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj '/C=US/ST=Denial/L=Springfield/O=Dis/CN=mundaneum' -keyout "+keyPath+" -out "+certPath);
     return generateSSL(cb);
+};
+
+exports.ensureServer = function(passphrase, port, host, mundaneumPath, storePath, openSSLBin, sslPath, keyPath, certPath, pidPath, cb) {
+    ensureMundaneumDir(mundaneumPath);
+    if (stat(pidPath)) return cb();
+    ensureSSL(openSSLBin, sslPath, keyPath, certPath, function(err) {
+        if (err) return cb(err);
+        connectDatastore(storePath, function(err, store) {
+            if (err) return cb(err);
+            serve(store, pidPath, {key:read(keyPath), cert: read(certPath)}, passphrase, port, host);
+            return cb();
+        });
+    });
 };
