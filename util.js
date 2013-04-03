@@ -6,7 +6,6 @@ a = require('allong.es');
 exports.stat = fs.existsSync;
 exports.mkdir = fs.mkdir;
 exports.read = fs.readFileSync;
-exports.write = fs.writeFileSync;
 exports.log = console.log;
 exports.error = console.error;
 exports.map = function(f, a) { return a.map(f); };

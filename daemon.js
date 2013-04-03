@@ -83,13 +83,12 @@ var requestServer = function(store, passphrase) {
     };
 };
 
-var serve = function(store, pidPath, ssl, passphrase, port, host) {
+var serve = function(store, ssl, passphrase, port, host) {
     var app = connect(ssl)
         .use(connect.bodyParser())
         .use(requestServer(store, passphrase));
     https.createServer(ssl, app).listen(port, host);
     log('listening at', host, port);
-    write(pidPath, 'TODO');
     return app;
 };
 
@@ -111,14 +110,13 @@ var ensureSSL = function(openSSLBin, sslPath, keyPath, certPath, cb) {
     return generateSSL(cb);
 };
 
-exports.ensureServer = function(passphrase, port, host, mundaneumPath, storePath, openSSLBin, sslPath, keyPath, certPath, pidPath, cb) {
+exports.ensureServer = function(passphrase, port, host, mundaneumPath, storePath, openSSLBin, sslPath, keyPath, certPath, cb) {
     ensureMundaneumDir(mundaneumPath);
-    if (stat(pidPath)) return cb();
     ensureSSL(openSSLBin, sslPath, keyPath, certPath, function(err) {
         if (err) return cb(err);
         connectDatastore(storePath, function(err, store) {
             if (err) return cb(err);
-            serve(store, pidPath, {key:read(keyPath), cert: read(certPath)}, passphrase, port, host);
+            serve(store, {key:read(keyPath), cert: read(certPath)}, passphrase, port, host);
             return cb();
         });
     });
