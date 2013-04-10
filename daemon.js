@@ -4,8 +4,10 @@ https = require('https');
 var connect = require('connect'),
 ds = require('docstore');
 
-var util = require('./util'),
-types = require('./types');
+var federate = require('./federate.js'),
+sync = require('./sync.js'),
+types = require('./types'),
+util = require('./util');
 
 util.extend(global, util, types);
 

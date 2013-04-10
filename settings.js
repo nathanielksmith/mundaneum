@@ -43,7 +43,7 @@ if (!exports.PASSPHRASE) {
     throw "a passphrase must be set in " + exports.RCPATH;
 }
 
-var processHosts = applyArg(arity(3)(function(label, hostport, passphrase) {
+var processHost = applyArg(arity(3)(function(label, hostport, passphrase) {
     hostport = hostport.split(':');
     return [label, {
         host:hostport[0],
@@ -51,7 +51,7 @@ var processHosts = applyArg(arity(3)(function(label, hostport, passphrase) {
         passphrase: passphrase
     }];
 }));
-exports.HOSTS = compose(tuples2obj, applyFirst(map, processHosts))(rc.hosts);
+exports.HOSTS = compose(tuples2obj, applyFirst(map, processHost))(rc.hosts);
 
 var processFederate = applyArg(function(label, filter) {
     return [label, {filter:new RegExp(filter || '.*')}];

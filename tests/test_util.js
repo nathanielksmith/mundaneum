@@ -33,6 +33,46 @@ exports.testUtil = {
         test.equal(result, 15);
         test.done();
     },
+    testGetWith: function(test) {
+        var obj = {a:'hello'};
+        var ret = util.getWith('a', obj);
+        test.equal(ret, 'hello');
+        test.done();
+    },
+    testGet: function(test) {
+        var obj = {a:'hello'};
+        var ret = util.get(obj, 'a');
+        test.equal(ret, 'hello');
+        test.done();
+    },
+    testVariadicNoArgs: function(test) {
+        var fn = function() { return 'a' }
+        test.ok(util.variadic(fn)(), 'a');
+        test.done();
+    },
+    testVariadicOneArg: function(test) {
+        var fn = function(a) { return a }
+        var ret = util.variadic(fn)(1,2,3,4,5);
+        test.deepEqual([1,2,3,4,5], ret);
+        test.done();
+    },
+    testVariadicNArgs: function(test) {
+        var fn = function(a, b, c, rest) {
+            return [a, b, c, rest];
+        }
+        var args = [1,2,3,4,5,6,7,8,9];
+        var ret = util.variadic(fn)(1,2,3,4,5,6,7,8,9);
+        test.deepEqual([1,2,3,[4,5,6,7,8,9]], ret);
+        test.done();
+    },
+    testApplyFirst: function(test) {
+        var fn = function(greeting, whom) {
+            return greeting + ', ' + whom + '!';
+        }
+        var ret = util.applyFirst(fn, 'hello')('nate');
+        test.equal(ret, 'hello, nate!');
+        test.done();
+    },
     testMaybe: function(test) {
         var throwing = function() { throw "an error" }
         var nothrow = function() { return "a value" }
@@ -41,7 +81,7 @@ exports.testUtil = {
         test.equal(noneResult.v(), 'an error');
         var valResult = util.maybe(nothrow)();
         test.equal(valResult.v(), 'a value');
-        
+
         test.done();
     },
     testSlice: function(test) {
