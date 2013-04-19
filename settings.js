@@ -56,14 +56,14 @@ var e = function(env) {
     e.HOSTS = tuples2obj(map(processHost, rc.hosts));
     
     var processFederate = applyArg(function(label, filter) {
-        return {label:label, filter:{filter:new RegExp(filter || '.*')}};
+        return {label:label, filter:new RegExp(filter || '.*')};
     });
     e.FEDERATE = map(processFederate, rc.federate);
     
     var processSync = applyArg(function(label, tag) {
-        return [label, {tag: tag || ''}];
+        return {label: label, tag: tag || ''};
     });
-    e.SYNC = compose(tuples2obj, applyFirst(map, processSync))(rc.sync);
+    e.SYNC = map(processSync, rc.sync);
 
     return e
 };

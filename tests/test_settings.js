@@ -16,6 +16,14 @@ exports.testSettings = {
                     ["sylvia", "sylvia:4078", "secrot"],
                     ["lambda_wiki", "lambdaphil.es:7768", "screret"],
                     ["earlham", "quark.cs.earlham.edu:5667", "screerit"]
+                ],
+                federate: [
+                    ['sylvia'],
+                    ['lambda_wiki', '#lwiki']
+                ],
+                sync: [
+                    ['sylvia'],
+                    ['earlham', '#earlham']
                 ]
             });
         }
@@ -65,6 +73,22 @@ exports.testSettings = {
             }
         });
 
+        test.done();
+    },
+    testFederateParsing: function(test) {
+        var s = settings(process.env);
+        test.equal(s.FEDERATE[0].label, 'sylvia');
+        test.equal(s.FEDERATE[1].label, 'lambda_wiki');
+        test.equal(s.FEDERATE[0].filter.toString(), '/.*/');
+        test.equal(s.FEDERATE[1].filter.toString(), '/#lwiki/');
+        test.done();
+    },
+    testSyncParsing: function(test) {
+        var s = settings(process.env);
+        test.deepEqual(s.SYNC, [
+            {label:'sylvia', tag:''},
+            {label:'earlham', tag:'#earlham'}
+        ]);
         test.done();
     }
 };
