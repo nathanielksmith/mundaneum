@@ -27,5 +27,5 @@ require('./util').extend(global, require('./util'));
     }
 
     var content = argv.slice(2).join(' ');
-    client.postNote(PORT, HOST, PASSPHRASE, content);
+    client.postNote(settings.PORT, settings.HOST, settings.PASSPHRASE, content);
 })(process.argv);
