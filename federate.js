@@ -1,5 +1,5 @@
 var client = require('./client'),
-settings = require('./settings'),
+settings = require('./settings')(process.env),
 util = require('./util');
 
 util.extend(global, require('./util'));

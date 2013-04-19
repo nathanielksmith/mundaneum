@@ -5,7 +5,7 @@ request = require('request');
 
 var client = require('./client'),
 daemon = require('./daemon'),
-settings = require('./settings');
+settings = require('./settings')(process.env);
 require('./util').extend(global, require('./util'));
 
 (function main(argv) {
