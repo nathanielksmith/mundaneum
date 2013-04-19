@@ -80,7 +80,7 @@ exports.tuples2obj = function(tuples) {
 
 exports.applyArg = function(fn) {
     return function() {
-        var args = exports.__slice(arguments).pop();
+        var args = arguments[0];
         return fn.apply(this, args);
     }
 };

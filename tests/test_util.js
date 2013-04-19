@@ -110,7 +110,12 @@ exports.testUtil = {
         test.done();
     },
     testApplyArg: function(test) {
-        var fn = function(x,y,z) {return x+y+z}
+        var fn = function(x,y,z) {
+            test.equal(x, 'hi');
+            test.equal(y, 'there');
+            test.equal(z, 'how');
+            return x+y+z
+        }
         var wrapped = util.applyArg(fn);
         var result = wrapped(['hi', 'there', 'how']);
         test.equal(result, 'hitherehow');

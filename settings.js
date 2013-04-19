@@ -45,16 +45,15 @@ var e = function(env) {
         throw "a passphrase must be set in " + e.RCPATH;
     }
     
-    //var processHost = applyArg(arity(3)(function(label, hostport, passphrase) {
-    var processHost = applyArg(function(label, hostport, passphrase) {
+    var processHost = applyArg(arity(3)(function(label, hostport, passphrase) {
         hostport = hostport.split(':');
         return [label, {
             host:hostport[0],
-            port:hostport[1] || PORTDEFAULT,
+            port:Number(hostport[1] || PORTDEFAULT),
             passphrase: passphrase
         }];
-    });
-    e.HOSTS = compose(tuples2obj, applyFirst(map, processHost))(rc.hosts);
+    }));
+    e.HOSTS = tuples2obj(map(processHost, rc.hosts));
     
     var processFederate = applyArg(function(label, filter) {
         return {label:label, filter:{filter:new RegExp(filter || '.*')}};
