@@ -1,64 +1,72 @@
-var path = require('path'),
-fs = require('fs');
+var path = require('path');
 
-require('./util').extend(global, require('./util'));
+var util = require('./util.js')
+
 
 // Defaults
 PORTDEFAULT = 4073;
 HOSTDEFAULT = 'localhost';
 
-// Static settings
-exports.HOME = process.env.HOME;
-exports.MUNDANEUMPATH = path.join(exports.HOME, '.mundaneum');
-exports.RCPATH = path.join(exports.MUNDANEUMPATH, 'mundaneumrc.json');
-exports.STOREPATH = path.join(exports.MUNDANEUMPATH, 'doctore');
-exports.SSLPATH = path.join(exports.MUNDANEUMPATH, 'ssl');
-exports.KEYPATH = path.join(exports.SSLPATH, 'mundaneum.key');
-exports.CERTPATH = path.join(exports.SSLPATH, 'mundaneum.cert');
-exports.OPENSSLBIN = '/usr/bin/openssl';
+var e = function(env) {
+    util.extend(global, util);
+    // Static settings
+    e.OPENSSLBIN = '/usr/bin/openssl';
+    e.HOME = env.HOME;
+    e.MUNDANEUMPATH = path.join(e.HOME, '.mundaneum');
+    e.RCPATH = path.join(e.MUNDANEUMPATH, 'mundaneumrc.json');
+    e.STOREPATH = path.join(e.MUNDANEUMPATH, 'doctore');
+    e.SSLPATH = path.join(e.MUNDANEUMPATH, 'ssl');
+    e.KEYPATH = path.join(e.SSLPATH, 'mundaneum.key');
+    e.CERTPATH = path.join(e.SSLPATH, 'mundaneum.cert');
+    
+    // Dynamic settings
+    if (!stat(e.RCPATH)) {
+        throw e.MUNDANEUMPATH + " must exist to minimally define a passphrase.";
+    }
+    
+    var rc;
+    try {
+        rc = JSON.parse(read(e.RCPATH));
+    }
+    catch (e) {
+        throw "error reading configuration file: " + e;
+    }
+    
+    rc.local = rc.local || {};
+    rc.hosts = rc.hosts || [];
+    rc.federate = rc.federate || [];
+    rc.sync = rc.sync || [];
+    
+    e.PORT = rc.local.port || PORTDEFAULT;
+    e.HOST = rc.local.host || HOSTDEFAULT;
+    e.PASSPHRASE = rc.local.passphrase;
+    
+    if (!e.PASSPHRASE) {
+        throw "a passphrase must be set in " + e.RCPATH;
+    }
+    
+    //var processHost = applyArg(arity(3)(function(label, hostport, passphrase) {
+    var processHost = applyArg(function(label, hostport, passphrase) {
+        hostport = hostport.split(':');
+        return [label, {
+            host:hostport[0],
+            port:hostport[1] || PORTDEFAULT,
+            passphrase: passphrase
+        }];
+    });
+    e.HOSTS = compose(tuples2obj, applyFirst(map, processHost))(rc.hosts);
+    
+    var processFederate = applyArg(function(label, filter) {
+        return {label:label, filter:{filter:new RegExp(filter || '.*')}};
+    });
+    e.FEDERATE = map(processFederate, rc.federate);
+    
+    var processSync = applyArg(function(label, tag) {
+        return [label, {tag: tag || ''}];
+    });
+    e.SYNC = compose(tuples2obj, applyFirst(map, processSync))(rc.sync);
 
-// Dynamic settings
-if (!stat(exports.RCPATH)) {
-    throw exports.MUNDANEUMPATH + " must exist to minimally define a passphrase.";
-}
+    return e
+};
 
-var rc;
-try {
-    rc = JSON.parse(read(exports.RCPATH));
-}
-catch (e) {
-    throw "error reading configuration file: " + e;
-}
-
-rc.local = rc.local || {};
-rc.hosts = rc.hosts || [];
-rc.federate = rc.federate || [];
-rc.sync = rc.sync || [];
-
-exports.PORT = rc.local.port || PORTDEFAULT;
-exports.HOST = rc.local.host || HOSTDEFAULT;
-exports.PASSPHRASE = rc.local.passphrase;
-
-if (!exports.PASSPHRASE) {
-    throw "a passphrase must be set in " + exports.RCPATH;
-}
-
-var processHost = applyArg(arity(3)(function(label, hostport, passphrase) {
-    hostport = hostport.split(':');
-    return [label, {
-        host:hostport[0],
-        port:hostport[1] || PORTDEFAULT,
-        passphrase: passphrase
-    }];
-}));
-exports.HOSTS = compose(tuples2obj, applyFirst(map, processHost))(rc.hosts);
-
-var processFederate = applyArg(function(label, filter) {
-    return [label, {filter:new RegExp(filter || '.*')}];
-});
-exports.FEDERATE = compose(tuples2obj, applyFirst(map, processFederate))(rc.federate);
-
-var processSync = applyArg(function(label, tag) {
-    return [label, {tag: tag || ''}];
-});
-exports.SYNC = compose(tuples2obj, applyFirst(map, processSync))(rc.sync);
+module.exports = e; 
