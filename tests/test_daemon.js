@@ -31,12 +31,58 @@ exports.testEnsureSSL = {
     },
 };
 
+exports.testEnsureDir = {
+    setUp: function(cb) {
+        this.ensureMundaneumDir = daemon.__get__('ensureMundaneumDir');
+        this.mockStat = m.create_func({return_value:false});
+        this.mockMkdir = m.create_func();
+        u.stat = this.mockStat;
+        u.mkdir = this.mockMkdir;
+        daemon.__set__('u', u);
+        cb();
+    },
+    testNoDir: function(test) {
+        this.ensureMundaneumDir();
+        test.equal(this.mockMkdir.calls, 1);
+        test.done();
+    },
+    testDirExists: function(test) {
+        this.mockStat.return_value = true;
+        this.ensureMundaneumDir();
+        test.ok(!this.mockMkdir.called);
+        test.done();
+    }
+};
 
-//        this.mockStore = {
-//            save: m.create_func({func:function(_, cb) {cb()}});
-//        };
-//        daemon.__set__('ds', this.mockStore);
-//        this.mockFederate = m.create_func();
-//        daemon.__set__('federate', this.mockFederate);
-//        cb();
+exports.testConnectDataStore = {
+    setUp: function(cb) {
+        this.connectDatastore = daemon.__get__('connectDatastore');
+        this.mockOpen = m.create_func();
+        daemon.__set__('ds', {
+            open: this.mockOpen
+        });
+        cb();
+    },
+    testSuccess: function(test) {
+        test.expect(2);
+        this.mockOpen.func = function(path, cb) {
+            cb(null, 'store');
+        };
 
+        this.connectDatastore('path', function(err, store) {
+            test.ok(!err);
+            test.equal(store, 'store');
+            test.done();
+        });
+    },
+    testFailure: function(test) {
+        test.expect(1);
+        this.mockOpen.func = function(path, cb) {
+            cb('error');
+        };
+        this.connectDatastore('path', function(err, store) {
+            test.equal(err, 'error');
+            test.done();
+        });
+    }
+};
