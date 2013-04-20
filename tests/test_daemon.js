@@ -86,3 +86,93 @@ exports.testConnectDataStore = {
         });
     }
 };
+
+exports.testRequestServer = {
+    setUp: function(cb) {
+        this.mockSave = m.create_func({func:function(note, cb) {
+            cb(null);
+        }})
+        this.mockStore = {save:this.mockSave};
+        this.requestServer = daemon.__get__('requestServer')(
+            this.mockStore, 'secret'
+        );
+        u.log = m.create_func();
+        u.error = m.create_func();
+        u.four = m.create_func();
+        u.five = m.create_func();
+        u.two = m.create_func();
+        daemon.__set__('u', u);
+        cb();
+    },
+    testBadPassphrase: function(test) {
+        this.requestServer({
+            method:'POST',
+            body: {
+                content: 'hello world',
+                passphrase: 'bad boom'
+            }
+        }, {});
+        test.equal(u.four.calls, 1);
+        test.equal(u.error.calls, 1);
+        test.ok(!this.mockSave.called);
+        test.ok(!u.two.called);
+
+        test.done();
+    },
+    testBadPayload: function(test) {
+        this.requestServer({
+            method:'POST',
+        }, {});
+        test.equal(u.four.calls, 1);
+        test.equal(u.error.calls, 1);
+        test.ok(!this.mockSave.called);
+        test.ok(!u.two.called);
+        test.done();
+    },
+    testBadContent: function(test) {
+        this.requestServer({
+            method:'POST',
+            body: {
+                passphrase: 'secret'
+            }
+        }, {});
+        test.equal(u.four.calls, 1);
+        test.equal(u.error.calls, 1);
+        test.ok(!this.mockSave.called);
+        test.ok(!u.two.called);
+        test.done();
+    },
+    testStoreError: function(test) {
+        this.mockSave.func = function(_, cb) {
+            cb('error');
+        };
+        this.requestServer({
+            method:'POST',
+            body: {
+                content: 'hello there',
+                passphrase: 'secret'
+            }
+        }, {});
+
+        test.ok(!u.two.called);
+        test.ok(!u.four.called);
+        test.equal(u.five.calls, 1);
+        test.equal(u.error.args[0][0], 'error');
+
+        test.done();
+    },
+    testSuccess: function(test) {
+        this.requestServer({
+            method:'POST',
+            body: {
+                content: 'hello there',
+                passphrase: 'secret'
+            }
+        }, {});
+
+        test.equal(u.two.calls, 1);
+        test.ok(!u.four.called);
+        test.ok(!u.five.called);
+        test.done();
+    }
+};
