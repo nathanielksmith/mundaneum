@@ -1,4 +1,5 @@
 var request = require('request');
+
 var u = require('./util.js');
 
 var createPayload = function(content, passphrase) {

@@ -5,8 +5,8 @@ request = require('request');
 
 var client = require('./client'),
 daemon = require('./daemon'),
-settings = require('./settings')(process.env);
-var u = require('./util.js');
+settings = require('./settings')(process.env),
+u = require('./util.js');
 
 (function main(argv) {
     if (argv.length <= 2) {return u.error('usage: TODO');}
