@@ -176,3 +176,35 @@ exports.testRequestServer = {
         test.done();
     }
 };
+
+exports.testAddSourceType = {
+    setUp: function(cb) {
+        this.addSourceType = daemon.__get__('addSourceType');
+        cb();
+    },
+    testFound: function(test) {
+        var note = this.addSourceType({
+            method: 'POST',
+            body: {
+                sourceType:'type'
+            }
+        }, {content:'hello'});
+
+        test.equal(note.content, 'hello');
+        test.equal(note.sourceType, 'type');
+
+        test.done();
+    },
+    testNotFound: function(test) {
+        var note = this.addSourceType({
+            method: 'POST',
+            body: {
+            }
+        }, {content:'hello'});
+
+        test.equal(note.content, 'hello');
+        test.ok(!note.sourceType);
+
+        test.done();
+    }
+};
