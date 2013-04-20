@@ -1,8 +1,6 @@
 var client = require('./client'),
-settings = require('./settings')(process.env),
-util = require('./util');
+u = require('./util');
 
-util.extend(global, require('./util'));
 
 var _postTo = function(noteContent, destination) {
     var port = destination.port;
@@ -11,23 +9,23 @@ var _postTo = function(noteContent, destination) {
     client.postNote(port, host, passphrase, noteContent);
 }
 
-var federate = function(noteContent) {
+var _federate = function(noteContent, hosts, federate) {
     var match = function(s, r) { return Boolean(s.match(r)) }
-    var matchFilter = compose(
-        applyFirst(match, noteContent),
-        applyFirst(getWith, 'filter')
+    var matchFilter = u.compose(
+        u.applyFirst(match, noteContent),
+        u.applyFirst(u.getWith, 'filter')
     );
-    var extractLabel = compose(
-        applyFirst(get, settings.HOSTS),
-        applyFirst(getWith, 'label')
+    var extractLabel = u.compose(
+        u.applyFirst(u.get, hosts),
+        u.applyFirst(u.getWith, 'label')
     );
-    var labels = map(extractLabel, filter(matchFilter, settings.FEDERATE));
+    var labels = u.map(extractLabel, u.filter(matchFilter, federate));
 
-    labels.forEach(applyFirst(_postTo, noteContent));
+    labels.forEach(u.applyFirst(_postTo, noteContent));
 }
 
-module.exports = function(noteContent, cb) {
+module.exports = function(noteContent, hosts, federate) {
     process.nextTick(function() {
-        federate(noteContent);
+        _federate(noteContent, hosts, federate);
     });
 }

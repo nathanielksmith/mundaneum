@@ -6,10 +6,10 @@ request = require('request');
 var client = require('./client'),
 daemon = require('./daemon'),
 settings = require('./settings')(process.env);
-require('./util').extend(global, require('./util'));
+var u = require('./util.js');
 
 (function main(argv) {
-    if (argv.length <= 2) {return error('usage: TODO');}
+    if (argv.length <= 2) {return u.error('usage: TODO');}
 
     if (argv[2].match(/-s|--start/)) {
         return daemon.ensureServer(
@@ -22,7 +22,7 @@ require('./util').extend(global, require('./util'));
             settings.SSLPATH,
             settings.KEYPATH,
             settings.CERTPATH,
-            function(err) { if (err) return error(err) }
+            function(err) { if (err) return u.error(err) }
         );
     }
 

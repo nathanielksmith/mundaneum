@@ -7,10 +7,7 @@ ds = require('docstore');
 var federate = require('./federate.js'),
 sync = require('./sync.js'),
 types = require('./types'),
-util = require('./util');
-
-util.extend(global, util, types);
-
+u = require('./util');
 
 var extractPayload = function(request) {
     if (request.method !== 'POST')
@@ -39,8 +36,8 @@ var addSourceUA = function(request, note) {
     return note;
 };
 var addSourceType = function(request, note) {
-    var maybePayload = maybe(extractPayload)(request);
-    if (type(None, maybePayload)) {
+    var maybePayload = u.maybe(extractPayload)(request);
+    if (types.type(types.None, maybePayload)) {
         return note;
     }
     var payload = maybePayload.v();
@@ -54,33 +51,33 @@ var saveNote = function(store, note, cb) {store.save(note, cb);}
 
 var requestServer = function(store, passphrase) {
     return function(request, response) {
-        log('request made');
-        log(request);
-        var maybeContent = maybe(compose(
+        u.log('request made');
+        u.log(request);
+        var maybeContent = u.maybe(u.compose(
                 extractContent,
-                applyFirst(verifyPayload, passphrase),
+                u.applyFirst(verifyPayload, passphrase),
                 extractPayload
         ))(request);
-        log(maybeContent);
-        if (type(None, maybeContent)) {
-            four(response);
-            return error(maybeContent.v());
+        u.log(maybeContent);
+        if (types.type(types.None, maybeContent)) {
+            u.four(response);
+            return u.error(maybeContent.v());
         }
 
         var content = maybeContent.v();
 
-        log(content);
+        u.log(content);
 
-        var note = compose(
-            applyFirst(addTimestamp, request),
-            applyFirst(addSourceUA, request),
-            applyFirst(addSourceType, request)
+        var note = u.compose(
+            u.applyFirst(addTimestamp, request),
+            u.applyFirst(addSourceUA, request),
+            u.applyFirst(addSourceType, request)
         )({content:content});
 
         saveNote(store, note, function(err) {
-            if (!err) return two(response);
-            five(response);
-            error(err);
+            if (!err) return u.two(response);
+            u.five(response);
+            u.error(err);
         });
     };
 };
@@ -90,7 +87,7 @@ var serve = function(store, ssl, passphrase, port, host) {
         .use(connect.bodyParser())
         .use(requestServer(store, passphrase));
     https.createServer(ssl, app).listen(port, host);
-    log('listening at', host, port);
+    u.log('listening at', host, port);
     return app;
 };
 
@@ -102,13 +99,13 @@ var connectDatastore = function(storePath, cb) {
 };
 
 var ensureMundaneumDir = function(mundaneumPath) {
-    if (!stat(mundaneumPath)) mkdir(mundaneumPath);
+    if (!u.stat(mundaneumPath)) u.mkdir(mundaneumPath);
 };
 
 var ensureSSL = function(openSSLBin, sslPath, keyPath, certPath, cb) {
-    if (!stat(sslPath)) mkdir(sslPath);
-    if (stat(keyPath) && stat(certPath)) return cb();
-    var generateSSL = applyFirst(exec, openSSLBin+" req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj '/C=US/ST=Denial/L=Springfield/O=Dis/CN=mundaneum' -keyout "+keyPath+" -out "+certPath);
+    if (!u.stat(sslPath)) u.mkdir(sslPath);
+    if (u.stat(keyPath) && u.stat(certPath)) return cb();
+    var generateSSL = u.applyFirst(exec, openSSLBin+" req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj '/C=US/ST=Denial/L=Springfield/O=Dis/CN=mundaneum' -keyout "+keyPath+" -out "+certPath);
     return generateSSL(cb);
 };
 

@@ -1,14 +1,12 @@
 var path = require('path');
 
-var util = require('./util.js')
-
+var u = require('./util.js');
 
 // Defaults
 PORTDEFAULT = 4073;
 HOSTDEFAULT = 'localhost';
 
 var e = function(env) {
-    util.extend(global, util);
     // Static settings
     e.OPENSSLBIN = '/usr/bin/openssl';
     e.HOME = env.HOME;
@@ -20,13 +18,13 @@ var e = function(env) {
     e.CERTPATH = path.join(e.SSLPATH, 'mundaneum.cert');
     
     // Dynamic settings
-    if (!stat(e.RCPATH)) {
+    if (!u.stat(e.RCPATH)) {
         throw e.MUNDANEUMPATH + " must exist to minimally define a passphrase.";
     }
     
     var rc;
     try {
-        rc = JSON.parse(read(e.RCPATH));
+        rc = JSON.parse(u.read(e.RCPATH));
     }
     catch (e) {
         throw "error reading configuration file: " + e;
@@ -45,7 +43,7 @@ var e = function(env) {
         throw "a passphrase must be set in " + e.RCPATH;
     }
     
-    var processHost = applyArg(arity(3)(function(label, hostport, passphrase) {
+    var processHost = u.applyArg(u.arity(3)(function(label, hostport, passphrase) {
         hostport = hostport.split(':');
         return [label, {
             host:hostport[0],
@@ -53,17 +51,17 @@ var e = function(env) {
             passphrase: passphrase
         }];
     }));
-    e.HOSTS = tuples2obj(map(processHost, rc.hosts));
+    e.HOSTS = u.tuples2obj(u.map(processHost, rc.hosts));
     
-    var processFederate = applyArg(function(label, filter) {
+    var processFederate = u.applyArg(function(label, filter) {
         return {label:label, filter:new RegExp(filter || '.*')};
     });
-    e.FEDERATE = map(processFederate, rc.federate);
+    e.FEDERATE = u.map(processFederate, rc.federate);
     
-    var processSync = applyArg(function(label, tag) {
+    var processSync = u.applyArg(function(label, tag) {
         return {label: label, tag: tag || ''};
     });
-    e.SYNC = map(processSync, rc.sync);
+    e.SYNC = u.map(processSync, rc.sync);
 
     return e
 };

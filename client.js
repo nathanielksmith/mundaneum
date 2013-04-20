@@ -1,5 +1,5 @@
 var request = require('request');
-require('./util').extend(global, require('util'));
+var u = require('./util.js');
 
 var createPayload = function(content, passphrase) {
     return {
@@ -19,6 +19,7 @@ exports.postNote = function(port, host, passphrase, content) {
         body: JSON.stringify(payload),
         uri: 'https://'+host+':'+port,
     }, function(err, response, body) {
-        if (err) error(err)
+        if (err) u.error(err)
+        // TODO log success
     });
 };
