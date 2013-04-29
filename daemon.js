@@ -52,7 +52,6 @@ var saveNote = function(store, note, cb) {store.save(note, cb);}
 var requestServer = function(store, passphrase) {
     return function(request, response) {
         u.log('request made');
-        u.log(request);
         var maybeContent = u.maybe(u.compose(
                 extractContent,
                 u.applyFirst(verifyPayload, passphrase),
@@ -115,7 +114,7 @@ exports.ensureServer = function(passphrase, port, host, mundaneumPath, storePath
         if (err) return cb(err);
         connectDatastore(storePath, function(err, store) {
             if (err) return cb(err);
-            serve(store, {key:read(keyPath), cert: read(certPath)}, passphrase, port, host);
+            serve(store, {key:u.read(keyPath), cert: u.read(certPath)}, passphrase, port, host);
             return cb();
         });
     });

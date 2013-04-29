@@ -45,26 +45,6 @@ exports.testUtil = {
         test.equal(ret, 'hello');
         test.done();
     },
-    testVariadicNoArgs: function(test) {
-        var fn = function() { return 'a' }
-        test.ok(util.variadic(fn)(), 'a');
-        test.done();
-    },
-    testVariadicOneArg: function(test) {
-        var fn = function(a) { return a }
-        var ret = util.variadic(fn)(1,2,3,4,5);
-        test.deepEqual([1,2,3,4,5], ret);
-        test.done();
-    },
-    testVariadicNArgs: function(test) {
-        var fn = function(a, b, c, rest) {
-            return [a, b, c, rest];
-        }
-        var args = [1,2,3,4,5,6,7,8,9];
-        var ret = util.variadic(fn)(1,2,3,4,5,6,7,8,9);
-        test.deepEqual([1,2,3,[4,5,6,7,8,9]], ret);
-        test.done();
-    },
     testApplyFirst: function(test) {
         var fn = function(greeting, whom) {
             return greeting + ', ' + whom + '!';
@@ -127,6 +107,60 @@ exports.testUtil = {
         var result = wrapped('hi', 'there', 'how');
         test.equal(result, 'hitherehow');
         test.throws(function() { wrapped(1,2) });
+        test.done();
+    },
+};
+
+exports.testVariadic = {
+    testNoArgs: function(test) {
+        var fn = function() { return 'a' }
+        test.ok(util.variadic(fn)(), 'a');
+        test.done();
+    },
+    testOneArg: function(test) {
+        var fn = function(a) { return a }
+        var ret = util.variadic(fn)(1,2,3,4,5);
+        test.deepEqual([1,2,3,4,5], ret);
+        test.done();
+    },
+    testNArgs: function(test) {
+        var fn = function(a, b, c, rest) {
+            return [a, b, c, rest];
+        }
+        var args = [1,2,3,4,5,6,7,8,9];
+        var ret = util.variadic(fn)(1,2,3,4,5,6,7,8,9);
+        test.deepEqual([1,2,3,[4,5,6,7,8,9]], ret);
+        test.done();
+    }
+};
+
+exports.testSkipUntil = {
+    setUp: function(cb) {
+        this.fn = function(x) { return x % 2 === 0 }
+        cb();
+    },
+    testMany: function(test) {
+        var a = [1,1,3,5,7,5,2,4,4,2,6,3,3,3];
+        var result = util.skipUntil(this.fn, a);
+        test.deepEqual(result, [2,4,4,2,6,3,3,3]);
+        test.done();
+    },
+    testImmediate: function(test) {
+        var a = [2,3,4,5,6];
+        var result = util.skipUntil(this.fn, a);
+        test.deepEqual(result, [2,3,4,5,6]);
+        test.done();
+    },
+    testEmpty: function(test) {
+        var a = [];
+        var result = util.skipUntil(this.fn, a);
+        test.deepEqual(result, []);
+        test.done();
+    },
+    testNone: function(test) {
+        var a = [1,3,5,7];
+        var result = util.skipUntil(this.fn, a);
+        test.deepEqual(result, []);
         test.done();
     }
 };

@@ -4,7 +4,6 @@ var u = require('./util.js');
 
 // Defaults
 PORTDEFAULT = 4073;
-HOSTDEFAULT = 'localhost';
 
 var e = function(env) {
     // Static settings
@@ -30,18 +29,9 @@ var e = function(env) {
         throw "error reading configuration file: " + e;
     }
     
-    rc.local = rc.local || {};
     rc.hosts = rc.hosts || [];
     rc.federate = rc.federate || [];
     rc.sync = rc.sync || [];
-    
-    e.PORT = rc.local.port || PORTDEFAULT;
-    e.HOST = rc.local.host || HOSTDEFAULT;
-    e.PASSPHRASE = rc.local.passphrase;
-    
-    if (!e.PASSPHRASE) {
-        throw "a passphrase must be set in " + e.RCPATH;
-    }
     
     var processHost = u.applyArg(u.arity(3)(function(label, hostport, passphrase) {
         hostport = hostport.split(':');

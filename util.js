@@ -9,6 +9,8 @@ exports.log = console.log;
 exports.error = console.error;
 exports.map = function(f, a) { return a.map(f); };
 exports.filter = function(f, a) { return a.filter(f); };
+exports.match = function(r, s) { return s.match(r); };
+exports.join = function(s, a) { return a.join(s); };
 
 var __slice = Array.prototype.slice.call.bind(Array.prototype.slice);
 
@@ -93,6 +95,16 @@ exports.arity = function(a) {
             return fn.apply(this, arguments);
         };
     };
+};
+
+exports.skipUntil = function(fn, a) {
+    var take = false;
+    return exports.filter(function(x) {
+        if (!take) {
+            take = fn(x);
+        }
+        return take;
+    }, a);
 };
 
 exports.endResponse = function(statusCode, response) {

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var path = require('path'),
+optimist = require('optimist'),
 request = require('request');
 
 var client = require('./client'),
@@ -8,16 +9,25 @@ daemon = require('./daemon'),
 settings = require('./settings')(process.env),
 u = require('./util.js');
 
-(function main(argv) {
-    if (argv.length <= 2) {return u.error('usage: TODO');}
+var mkStorePath = function(root, label) {
+    return path.join(root, label);
+};
 
-    if (argv[2].match(/-s|--start/)) {
+(function main(argv, rawArgv) {
+    var hostLabel = argv.label || argv.l || 'local';
+    var hostObj = settings.HOSTS[hostLabel];
+
+    if (!hostObj) {
+        return u.error('no such label');
+    }
+
+    if (argv.start || argv.s) {
         return daemon.ensureServer(
-            settings.PASSPHRASE,
-            Number(argv[3]) || settings.PORT,
-            settings.HOST,
+            hostObj.passphrase,
+            hostObj.port,
+            hostObj.host,
             settings.MUNDANEUMPATH,
-            settings.STOREPATH,
+            mkStorePath(settings.STOREPATH, hostLabel),
             settings.OPENSSLBIN,
             settings.SSLPATH,
             settings.KEYPATH,
@@ -26,6 +36,10 @@ u = require('./util.js');
         );
     }
 
-    var content = argv.slice(2).join(' ');
-    client.postNote(settings.PORT, settings.HOST, settings.PASSPHRASE, content);
-})(process.argv);
+    var content = u.join(' ',
+        u.skipUntil(u.applyFirst(u.match, /^[^-]/), rawArgv.slice(2))
+    );
+
+
+    client.postNote(hostObj.port, hostObj.host, hostObj.passphrase, content);
+})(optimist.argv, process.argv);
